@@ -54,8 +54,24 @@ jobs:
             dist/*.tar.gz
             dist/*.zip
             dist/SHA256SUMS
-  publish:
+  windows-bundle:
     needs: build
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: distributions
+          path: dist
+      - name: Verify native PowerShell installer before publication
+        shell: powershell
+        run: |
+          $asset = (Get-ChildItem dist -Filter '*windows*.zip')[0].FullName
+          Expand-Archive $asset -DestinationPath unpacked
+          $bundle = (Get-ChildItem unpacked -Directory)[0].FullName
+          ./scripts/test-windows-wrapper.ps1 -Bundle $bundle
+  publish:
+    needs: [build, windows-bundle]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -71,7 +87,12 @@ jobs:
           VERSION: ${{ inputs.version }}
           SOURCE_COMMIT: ${{ inputs.source_commit }}
         run: |
-          gh release create "v$VERSION" dist/*.tar.gz dist/*.zip dist/SHA256SUMS --title "AMD FPGA MCP $VERSION" --notes "Linux x86_64 and Windows WSL2 x86_64. Python 3.12 required. Source commit: $SOURCE_COMMIT. Windows uses the Linux backend through WSL2; native Windows is not supported. See the deployment page for setup and validation boundaries." --target "$GITHUB_SHA"
+          if notes=$(gh release view "v$VERSION" --json body --jq .body 2>/dev/null); then
+            [[ "$notes" == *"Source commit: $SOURCE_COMMIT."* ]] || { echo 'Existing release has different source provenance'; exit 1; }
+            echo 'Release already exists; preserving immutable public assets and re-verifying downloads.'
+          else
+            gh release create "v$VERSION" dist/*.tar.gz dist/*.zip dist/SHA256SUMS --title "AMD FPGA MCP $VERSION" --notes "Linux x86_64 and Windows WSL2 x86_64. Python 3.12 required. Source commit: $SOURCE_COMMIT. Windows uses the Linux backend through WSL2; native Windows is not supported. See the deployment page for setup and validation boundaries." --target "$GITHUB_SHA"
+          fi
   verify:
     needs: publish
     uses: ./.github/workflows/verify.yml
