@@ -1,7 +1,8 @@
-"""Build two reproducible host entry bundles from a tested source checkout."""
+"""Build two host entry bundles from a tested source checkout."""
 import argparse
 import hashlib
 import json
+from email.parser import BytesParser
 from pathlib import Path
 import shutil
 import subprocess
@@ -26,6 +27,12 @@ wheel = next(wheelhouse.glob("amd_fpga_mcp-*.whl"))
 if wheel.name != f"amd_fpga_mcp-{a.version}-py3-none-any.whl":
     raise SystemExit("Source version does not match release version")
 subprocess.run([sys.executable, "-m", "pip", "download", "--only-binary=:all:", "--dest", str(wheelhouse), str(wheel)], check=True)
+locked = []
+for dependency in sorted(wheelhouse.glob('*.whl')):
+    with zipfile.ZipFile(dependency) as archive:
+        metadata = BytesParser().parsebytes(archive.read(next(n for n in archive.namelist() if n.endswith('.dist-info/METADATA'))))
+    locked.append(f"{metadata['Name']}=={metadata['Version']} --hash=sha256:{hashlib.sha256(dependency.read_bytes()).hexdigest()}")
+(bundle / 'requirements.lock').write_text('\n'.join(locked) + '\n')
 shutil.copy(a.source / "LICENSE", bundle)
 shutil.copy(a.source / "tests/integration/live_installed.py", bundle / "verify.py")
 for name in ("install.sh", "install.ps1", "README.md"):

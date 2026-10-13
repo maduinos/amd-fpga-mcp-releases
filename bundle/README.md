@@ -20,11 +20,11 @@ USB/JTAG forwarding, vendor tools inside WSL and particular boards require separ
 
 MCP configuration (replace the Linux user and version):
 ```json
-{"mcpServers":{"amd-fpga":{"command":"/home/<linux-user>/.local/share/amd-fpga-mcp/0.7.0/bin/amd-fpga-mcp","args":[]}}}
+{"mcpServers":{"amd-fpga":{"command":"/home/<linux-user>/.local/share/amd-fpga-mcp/0.7.1/bin/amd-fpga-mcp","args":[]}}}
 ```
 Windows configuration:
 ```json
-{"mcpServers":{"amd-fpga":{"command":"wsl.exe","args":["-d","Ubuntu-24.04","--","/home/<linux-user>/.local/share/amd-fpga-mcp/0.7.0/bin/amd-fpga-mcp"]}}}
+{"mcpServers":{"amd-fpga":{"command":"wsl.exe","args":["-d","Ubuntu-24.04","--","/home/<linux-user>/.local/share/amd-fpga-mcp/0.7.1/bin/amd-fpga-mcp"]}}}
 ```
 Restart your MCP client after changing configuration. No AMD tools or licenses are included.
 Start by asking the client to call `get_server_info`, inspect toolchains and list board profiles.

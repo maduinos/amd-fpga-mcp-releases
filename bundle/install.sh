@@ -12,7 +12,7 @@ version="$("$python_bin" -c 'import json,sys; print(json.load(open(sys.argv[1]))
 target="$prefix/$version"
 if [[ -e "$target" ]]; then echo "Installation already exists: $target" >&2; exit 1; fi
 "$python_bin" -m venv "$target"
-"$target/bin/python" -m pip install --no-index --find-links "$bundle_dir/wheelhouse" "amd-fpga-mcp==$version"
+"$target/bin/python" -m pip install --no-index --require-hashes --find-links "$bundle_dir/wheelhouse" -r "$bundle_dir/requirements.lock"
 "$target/bin/python" -m pip check
 (cd /tmp && env -u PYTHONPATH "$target/bin/python" "$bundle_dir/verify.py")
 echo "MCP command: $target/bin/amd-fpga-mcp"
