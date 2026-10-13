@@ -39,6 +39,9 @@ try {
         try { & "$Bundle/install.ps1" } catch { $caught = $true }
         if (-not $caught) { throw "Installer failed to reject: $mode" }
     }
+    # The intentional failing native process above must not leak its exit code
+    # into GitHub Actions' automatic PowerShell step exit check.
+    $global:LASTEXITCODE = 0
     Write-Host 'Downloaded ZIP integrity and native PowerShell wrapper contract passed. Full WSL2 provisioning/hardware is outside hosted CI.'
 } finally {
     $env:PATH = $oldPath
