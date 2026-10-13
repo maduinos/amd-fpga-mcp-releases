@@ -1,0 +1,57 @@
+name: Verify published downloads
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Published version (without v)
+        required: true
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  downloaded-linux:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        archive: [linux-x86_64.tar.gz, windows-wsl2-x86_64.zip]
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download public assets and verify offline installation
+        env:
+          VERSION: ${{ inputs.version }}
+          ARCHIVE: ${{ matrix.archive }}
+        run: |
+          base="https://github.com/${{ github.repository }}/releases/download/v$VERSION"
+          curl --fail --location --retry 3 "$base/SHA256SUMS" -o SHA256SUMS
+          curl --fail --location --retry 3 "$base/amd-fpga-mcp-$VERSION-$ARCHIVE" -o "amd-fpga-mcp-$VERSION-$ARCHIVE"
+          sha256sum --check --ignore-missing SHA256SUMS
+          if [[ "$ARCHIVE" == *.zip ]]; then unzip -q "amd-fpga-mcp-$VERSION-$ARCHIVE"; else tar -xzf "amd-fpga-mcp-$VERSION-$ARCHIVE"; fi
+          bash "amd-fpga-mcp-$VERSION/install.sh" "$RUNNER_TEMP/downloaded"
+  downloaded-windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download ZIP, verify files and exercise PowerShell forwarding
+        shell: pwsh
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          $base = "https://github.com/${{ github.repository }}/releases/download/v$env:VERSION"
+          $asset = "amd-fpga-mcp-$env:VERSION-windows-wsl2-x86_64.zip"
+          Invoke-WebRequest "$base/$asset" -OutFile $asset
+          Invoke-WebRequest "$base/SHA256SUMS" -OutFile SHA256SUMS
+          $expected = ((Get-Content SHA256SUMS | Where-Object { $_.EndsWith($asset) }) -split '\s+')[0]
+          if ((Get-FileHash $asset -Algorithm SHA256).Hash.ToLower() -ne $expected) { throw 'Archive checksum mismatch' }
+          Expand-Archive $asset -DestinationPath unpacked
+          $bundle = (Get-ChildItem unpacked -Directory)[0].FullName
+          foreach ($line in Get-Content "$bundle/MANIFEST.sha256") {
+            $parts = $line -split '  ', 2
+            if ((Get-FileHash (Join-Path $bundle $parts[1]) -Algorithm SHA256).Hash.ToLower() -ne $parts[0]) { throw 'Bundle checksum mismatch' }
+          }
+          ./scripts/test-windows-wrapper.ps1 -Bundle $bundle
