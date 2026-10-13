@@ -38,7 +38,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Download ZIP, verify files and exercise PowerShell forwarding
-        shell: pwsh
+        shell: powershell
         env:
           VERSION: ${{ inputs.version }}
         run: |
