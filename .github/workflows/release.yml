@@ -98,3 +98,15 @@ jobs:
     uses: ./.github/workflows/verify.yml
     with:
       version: ${{ inputs.version }}
+  update-page:
+    needs: verify
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Refresh English page after successful download verification
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run pages.yml --ref main
