@@ -1,0 +1,31 @@
+{
+  "creator": "whjeong",
+  "date": "2026-10-13",
+  "version": "0.7.1",
+  "source_commit": "3a5c057716bd8d3f752242896cd4e2ac758b8196",
+  "release_ci": "https://github.com/maduinos/amd-fpga-mcp-releases/actions/runs/38366070365",
+  "release_ci_conclusion": "success",
+  "regression_tests": 252,
+  "mcp_tools": 96,
+  "local_public_download_verification": {
+    "both_archive_checksums": "passed",
+    "both_offline_installs": "passed",
+    "both_linux_backend_mcp_handshakes": "passed",
+    "installed_job_success_failure_timeout_cancel_persistence": "passed"
+  },
+  "windows_ci": {
+    "runner": "windows-2022",
+    "zip_integrity": "passed",
+    "native_powershell_installer_argv_spaces_localization_error_handling": "passed",
+    "wsl_command_backend": "native executable contract fixture, not a real WSL2 environment"
+  },
+  "not_verified": [
+    "Native Windows Python execution is unsupported",
+    "Real Windows PC full WSL2 provisioning and MCP client launch",
+    "AMD toolchain execution and USB/JTAG forwarding on Windows"
+  ],
+  "archives_sha256": {
+    "amd-fpga-mcp-0.7.1-linux-x86_64.tar.gz": "02983acd34cfac2a19f860cdeba4f58cd9e00de5bda016bd5d9c66e99c9e292f",
+    "amd-fpga-mcp-0.7.1-windows-wsl2-x86_64.zip": "353e8a4e2b59600a89e453fd5a3ca8b6c262d1579ac857a3821d3a8ff966ede6"
+  }
+}
