@@ -35,8 +35,11 @@ for dependency in sorted(wheelhouse.glob('*.whl')):
 (bundle / 'requirements.lock').write_text('\n'.join(locked) + '\n')
 shutil.copy(a.source / "LICENSE", bundle)
 shutil.copy(a.source / "tests/integration/live_installed.py", bundle / "verify.py")
-for name in ("install.sh", "install.ps1", "README.md"):
+for name in ("install.sh", "install.ps1"):
     shutil.copy(root / "bundle" / name, bundle)
+readme = (root / "README.md").read_text()
+readme = readme.replace('(docs/MAINTAINERS.md)', '(https://github.com/maduinos/amd-fpga-mcp-releases/blob/main/docs/MAINTAINERS.md)')
+(bundle / "README.md").write_text(readme)
 (bundle / "release.json").write_text(json.dumps({"version": a.version, "source_commit": a.commit, "python": "3.12", "backend": "Linux x86_64; Windows uses WSL2"}, indent=2) + "\n")
 lines = [f"{hashlib.sha256(f.read_bytes()).hexdigest()}  {f.relative_to(bundle).as_posix()}" for f in sorted(bundle.rglob("*")) if f.is_file()]
 (bundle / "MANIFEST.sha256").write_text("\n".join(lines) + "\n")
